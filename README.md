@@ -79,7 +79,7 @@ sequenceDiagram
 
 ```bash
 # Clone the repo
-git clone https://github.com/AIMentoringClub/claude-crew.git
+git clone https://github.com/mare22/claude-crew.git
 
 # Copy skills and agents into your project
 cp -r claude-crew/.claude/skills/ your-project/.claude/skills/
