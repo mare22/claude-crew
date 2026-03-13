@@ -93,9 +93,38 @@ Browse the files and adapt the agent prompts to your workflow.
 ### Prerequisites
 
 - [Claude Code](https://claude.com/claude-code) CLI installed
-- [playwright-cli](https://www.npmjs.com/package/playwright-cli) for QA and design review agents
-- The `playwright-cli` skill installed in `~/.claude/skills/` (for browser automation)
-- Optionally: the `frontend-design` skill for developer agents working on UI
+
+#### Required: Playwright Plugin
+
+The QA and Design Review agents use Playwright for browser automation. Install the official plugin:
+
+```bash
+# Inside Claude Code, run:
+/install playwright
+```
+
+This installs the `playwright` plugin from the official marketplace, which provides the `playwright-cli` skill for browser interaction (navigation, clicking, screenshots, etc.).
+
+If you prefer to install `playwright-cli` as a standalone npm tool:
+
+```bash
+npm install -g playwright-cli
+```
+
+#### Recommended: Frontend Design Plugin
+
+The Developer agent uses this skill for guidance when implementing UI stories. It helps produce distinctive, polished interfaces instead of generic AI-generated designs.
+
+```bash
+# Inside Claude Code, run:
+/install frontend-design
+```
+
+This installs from the `claude-code-plugins` marketplace.
+
+#### Verify Installation
+
+After installing, restart Claude Code and run `/agents` to confirm the three claude-crew agents are loaded: `developer`, `qa`, `design-review`.
 
 ---
 
