@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Crew Board</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  *, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  :root {
+    --bg: #0e0e11;
+    --surface: #16161a;
+    --surface-hover: #1c1c21;
+    --border: #25252b;
+    --text: #e8e8ed;
+    --text-muted: #7a7a85;
+    --text-dim: #52525b;
+
+    --todo: #a1a1aa;
+    --in-progress: #6d9fff;
+    --blocked: #ef5350;
+    --qa: #c084fc;
+    --design-review: #f472b6;
+    --human-review: #fb923c;
+    --done: #4ade80;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Header */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .header h1 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .header-project {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--done);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .status-dot.disconnected {
+    background: var(--blocked);
+    animation: none;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .status-label {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .progress-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .progress-track {
+    width: 120px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--done);
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  .progress-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    min-width: 56px;
+  }
+
+  /* Board */
+  .board {
+    display: flex;
+    gap: 1px;
+    background: var(--border);
+    height: calc(100vh - 57px);
+    overflow-x: auto;
+  }
+
+  .column {
+    flex: 1;
+    min-width: 220px;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .column-header {
+    padding: 14px 16px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+  }
+
+  .column-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .column-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .column-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+
+  .column-count {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 500;
+    background: var(--surface);
+    padding: 1px 7px;
+    border-radius: 10px;
+  }
+
+  .column-cards {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 8px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .column-cards::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .column-cards::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .column-cards::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 2px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: default;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .card:hover {
+    background: var(--surface-hover);
+    border-color: #2e2e36;
+  }
+
+  .card-id {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .card-description {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 8px;
+    display: none;
+  }
+
+  .card.expanded .card-description {
+    display: block;
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-priority {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .priority-bar {
+    display: flex;
+    gap: 2px;
+  }
+
+  .priority-bar span {
+    width: 3px;
+    height: 10px;
+    border-radius: 1px;
+    background: var(--border);
+  }
+
+  .priority-bar.p-high span { background: var(--blocked); }
+  .priority-bar.p-high span:nth-child(n+4) { background: var(--border); }
+  .priority-bar.p-med span:nth-child(-n+2) { background: var(--human-review); }
+  .priority-bar.p-low span:first-child { background: var(--text-dim); }
+
+  .card-criteria {
+    font-size: 10px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .card-notes {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .card-notes:empty {
+    display: none;
+  }
+
+  .notes-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  /* Empty state */
+  .empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    padding: 32px;
+  }
+
+  .empty-state-inner {
+    max-width: 360px;
+  }
+
+  .empty-state h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .empty-state p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .drop-zone {
+    border: 1.5px dashed var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: pointer;
+  }
+
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--in-progress);
+    background: rgba(109, 159, 255, 0.04);
+  }
+
+  .drop-zone p {
+    margin-bottom: 0;
+  }
+
+  .file-input {
+    display: none;
+  }
+
+  .load-btn {
+    display: inline-block;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .load-btn:hover {
+    background: var(--surface-hover);
+  }
+
+  /* Last updated */
+  .last-updated {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>Claude Crew</h1>
+    <span class="header-project" id="project-name"></span>
+  </div>
+  <div class="header-right">
+    <div class="progress-bar-container" id="progress-container" style="display:none">
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <span class="progress-text" id="progress-text">0 / 0</span>
+    </div>
+    <span class="last-updated" id="last-updated"></span>
+    <div style="display:flex;align-items:center;gap:6px">
+      <div class="status-dot" id="status-dot"></div>
+      <span class="status-label" id="status-label">connecting</span>
+    </div>
+  </div>
+</div>
+
+<div id="app"></div>
+
+<input type="file" id="file-input" class="file-input" accept=".json">
+
+<script>
+const COLUMNS = [
+  { key: 'todo',           label: 'Todo',           color: '#a1a1aa' },
+  { key: 'in-progress',    label: 'In Progress',    color: '#6d9fff' },
+  { key: 'blocked',        label: 'Blocked',        color: '#ef5350' },
+  { key: 'qa',             label: 'QA',             color: '#c084fc' },
+  { key: 'design-review',  label: 'Design Review',  color: '#f472b6' },
+  { key: 'human-review',   label: 'Human Review',   color: '#fb923c' },
+  { key: 'done',           label: 'Done',           color: '#4ade80' },
+];
+
+const REFRESH_MS = 5000;
+let boardData = null;
+let fetchMode = null; // 'http' or 'file'
+let fileHandle = null;
+let pollTimer = null;
+
+// ── Rendering ──────────────────────────────────────────────
+
+function render(data) {
+  boardData = data;
+  const app = document.getElementById('app');
+
+  document.getElementById('project-name').textContent = data.project || '';
+
+  // Progress
+  const total = data.userStories.length;
+  const done = data.userStories.filter(s => s.status === 'done').length;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = done + ' / ' + total + ' done';
+  document.getElementById('progress-container').style.display = total ? 'flex' : 'none';
+
+  // Group stories by status
+  const grouped = {};
+  COLUMNS.forEach(c => grouped[c.key] = []);
+  data.userStories.forEach(story => {
+    const key = story.status || 'todo';
+    if (grouped[key]) grouped[key].push(story);
+    else grouped['todo'].push(story);
+  });
+
+  // Sort by priority within each column
+  COLUMNS.forEach(c => {
+    grouped[c.key].sort((a, b) => (a.priority || 99) - (b.priority || 99));
+  });
+
+  app.innerHTML = '';
+  const board = document.createElement('div');
+  board.className = 'board';
+
+  COLUMNS.forEach(col => {
+    const stories = grouped[col.key];
+    const column = document.createElement('div');
+    column.className = 'column';
+    column.innerHTML = `
+      <div class="column-header">
+        <div class="column-header-left">
+          <div class="column-dot" style="background:${col.color}"></div>
+          <span class="column-title">${col.label}</span>
+        </div>
+        <span class="column-count">${stories.length}</span>
+      </div>
+      <div class="column-cards">
+        ${stories.map(s => renderCard(s, col)).join('')}
+      </div>
+    `;
+    board.appendChild(column);
+  });
+
+  app.appendChild(board);
+
+  // Expand/collapse
+  board.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', () => card.classList.toggle('expanded'));
+  });
+}
+
+function renderCard(story, col) {
+  const ac = story.acceptanceCriteria || [];
+  const priorityLevel = story.priority <= 2 ? 'high' : story.priority <= 4 ? 'med' : 'low';
+  const priorityClass = 'p-' + priorityLevel;
+
+  const bars = Array.from({ length: 3 }, (_, i) => '<span></span>').join('');
+
+  let notesHtml = '';
+  if (story.notes && story.notes.trim()) {
+    notesHtml = `
+      <div class="card-notes">
+        <div class="notes-label">Notes</div>
+        ${escapeHtml(story.notes)}
+      </div>
+    `;
+  }
+
+  let descHtml = '';
+  if (story.description) {
+    descHtml = `<div class="card-description">${escapeHtml(story.description)}</div>`;
+  }
+
+  return `
+    <div class="card">
+      <div class="card-id">${escapeHtml(story.id)}</div>
+      <div class="card-title">${escapeHtml(story.title)}</div>
+      ${descHtml}
+      <div class="card-meta">
+        <div class="card-priority">
+          <div class="priority-bar ${priorityClass}">${bars}</div>
+          P${story.priority || '?'}
+        </div>
+        <div class="card-criteria">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+            <rect x="1" y="1" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M4.5 8L7 10.5L11.5 5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          ${ac.length}
+        </div>
+      </div>
+      ${notesHtml}
+    </div>
+  `;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ── Loading ────────────────────────────────────────────────
+
+function setStatus(connected, label) {
+  const dot = document.getElementById('status-dot');
+  const lbl = document.getElementById('status-label');
+  dot.className = 'status-dot' + (connected ? '' : ' disconnected');
+  lbl.textContent = label || (connected ? 'live' : 'disconnected');
+}
+
+function setLastUpdated() {
+  const now = new Date();
+  const t = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  document.getElementById('last-updated').textContent = 'Updated ' + t;
+}
+
+async function tryFetch() {
+  try {
+    const res = await fetch('./board.json?t=' + Date.now());
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    fetchMode = 'http';
+    setStatus(true, 'live · 5s');
+    setLastUpdated();
+    render(data);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function showDropZone() {
+  setStatus(false, 'file mode');
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  const empty = document.createElement('div');
+  empty.className = 'empty-state';
+  empty.innerHTML = `
+    <div class="empty-state-inner">
+      <div class="drop-zone" id="drop-zone">
+        <h2>Load board.json</h2>
+        <p>Drop your <code>board.json</code> file here or click to browse.</p>
+        <p style="font-size:11px;color:var(--text-dim);margin-top:12px">
+          For live auto-refresh, serve this directory:<br>
+          <code style="color:var(--in-progress)">npx serve tasks/</code> or
+          <code style="color:var(--in-progress)">python3 -m http.server -d tasks/</code>
+        </p>
+      </div>
+    </div>
+  `;
+  app.appendChild(empty);
+
+  const dropZone = document.getElementById('drop-zone');
+  const fileInput = document.getElementById('file-input');
+
+  dropZone.addEventListener('click', () => fileInput.click());
+
+  dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+  });
+
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) loadFile(file);
+  });
+
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) loadFile(file);
+  });
+}
+
+function loadFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      fetchMode = 'file';
+      setStatus(true, 'file loaded');
+      setLastUpdated();
+      render(data);
+    } catch (err) {
+      alert('Invalid JSON file');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ── Polling ────────────────────────────────────────────────
+
+async function poll() {
+  if (fetchMode === 'http') {
+    await tryFetch();
+  }
+}
+
+// ── Init ───────────────────────────────────────────────────
+
+async function init() {
+  const ok = await tryFetch();
+  if (!ok) {
+    showDropZone();
+  }
+  pollTimer = setInterval(poll, REFRESH_MS);
+}
+
+init();
+</script>
+</body>
+</html>

@@ -199,7 +199,25 @@ Run each crew in a **separate session**:
 /start-crew → 3
 ```
 
-### Step 4: Human Review
+### Step 4: Monitor Progress
+
+Open the visual board to see story statuses in real-time:
+
+```bash
+# Serve the tasks directory and open the board
+npx serve tasks/
+# Then open http://localhost:3000/board.html
+
+# Or with Python
+python3 -m http.server -d tasks/ 8080
+# Then open http://localhost:8080/board.html
+```
+
+The board auto-refreshes every 5 seconds, so you can watch stories move across columns as agents work.
+
+If you can't run a server, open `tasks/board.html` directly in a browser and drag-and-drop `board.json` onto the page.
+
+### Step 5: Human Review
 
 Stories that pass both QA and design review land in `"human-review"` status. Open `tasks/board.json`, check the work, and set status to `"done"` when satisfied.
 
@@ -223,6 +241,7 @@ your-project/
 └── tasks/                         # Generated at runtime
     ├── prd-[feature].md           # PRD document
     ├── board.json                 # Task board (source of truth)
+    ├── board.html                 # Visual kanban board (auto-refreshes)
     └── progress.txt               # Progress log & codebase patterns
 ```
 
