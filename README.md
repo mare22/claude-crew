@@ -15,6 +15,8 @@ You define the feature. Claude Crew breaks it into user stories, then developer,
 │   1. /build-prd    → describe your feature                  │
 │   2. /build-board  → convert PRD into task board            │
 │   3. /start-crew   → pick a crew and let them work          │
+│   4. /add-task     → add bugs, features, improvements       │
+│   5. /review-task  → approve or reject completed work       │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -46,7 +48,8 @@ stateDiagram-v2
     qa --> todo: QA fails ❌ (with bug report)
     design_review --> human_review: Design passes ✅
     design_review --> todo: Design fails ❌ (with screenshots)
-    human_review --> done: Human approves ✅
+    human_review --> done: /review-task approves ✅
+    human_review --> todo: /review-task rejects ❌ (with feedback)
     done --> [*]
 ```
 
@@ -219,7 +222,53 @@ If you can't run a server, open `tasks/board.html` directly in a browser and dra
 
 ### Step 5: Human Review
 
-Stories that pass both QA and design review land in `"human-review"` status. Open `tasks/board.json`, check the work, and set status to `"done"` when satisfied.
+Stories that pass both QA and design review land in `"human-review"` status. Use the review skill to approve or reject:
+
+```
+/review-task
+```
+
+The skill shows you each task in human-review with its full details, QA notes, and design review notes. You can:
+
+- **Approve** — moves the story to `"done"`
+- **Reject** — sends it back to `"todo"` at highest priority with your feedback and optional screenshots
+
+**Example:**
+```
+/review-task
+
+## US-003: Add priority badges to task cards
+Notes: "QA passed. Design review passed: layout, colors, responsive checked."
+
+What's your verdict?
+1. Approve
+2. Reject
+
+> 2
+> The badge colors don't match our brand. Should use #3B82F6 for blue, not #60A5FA.
+> Also see ~/Desktop/badge-comparison.png
+
+US-003 → back to todo (priority 0). Feedback + screenshot saved.
+```
+
+### Adding Tasks Mid-Sprint
+
+Need to add a bug fix, new feature, or improvement while agents are already working?
+
+```
+/add-task
+```
+
+Describe what you need in plain language. The skill generates a structured story with acceptance criteria and asks you where to prioritize it.
+
+**Examples:**
+```
+/add-task Fix the login button — it returns a 500 error on mobile
+/add-task Add dark mode toggle to settings page
+/add-task Improve dashboard load time by lazy-loading charts
+```
+
+Tasks are automatically typed (`BUG-001`, `IMP-001`, or `US-XXX`) and added to `board.json` at your chosen priority.
 
 ---
 
@@ -237,7 +286,9 @@ your-project/
 │   └── skills/                    # Slash command skills
 │       ├── build-prd/SKILL.md     # /build-prd
 │       ├── build-board/SKILL.md   # /build-board
-│       └── start-crew/SKILL.md    # /start-crew orchestrator
+│       ├── start-crew/SKILL.md    # /start-crew orchestrator
+│       ├── add-task/SKILL.md      # /add-task — add tasks to the board
+│       └── review-task/SKILL.md   # /review-task — approve/reject work
 └── tasks/                         # Generated at runtime
     ├── prd-[feature].md           # PRD document
     ├── board.json                 # Task board (source of truth)

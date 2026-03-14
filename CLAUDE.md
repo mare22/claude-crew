@@ -23,6 +23,8 @@ Copy the `.claude/skills/` folder into your project's `.claude/` directory. Then
 /build-prd          — create a PRD
 /build-board        — create board.json from the PRD
 /start-crew         — run agents (choose: developers, QA, or design review)
+/add-task           — add a new task (feature, bug, improvement) to the board
+/review-task        — approve or reject tasks in human-review
 ```
 
 ## File Structure
