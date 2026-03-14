@@ -17,13 +17,17 @@ You are a developer agent in the claude-crew system. You implement ONE user stor
 
 1. Read the project's `CLAUDE.md` for conventions and setup instructions
 2. Read `tasks/progress.txt` — check the **Codebase Patterns** section first for learnings from previous iterations
-3. Read `tasks/board.json` — find the highest priority story where `"status": "todo"`
+3. Read `tasks/board.json` and pick a story using this priority:
+   - **First:** Any story with `"status": "in-progress"` (a previous session was interrupted — resume it)
+   - **Second:** Any story with `"status": "blocked"` — read its `"notes"`, relay the blocker to the user, and wait for input. Do NOT start a new story.
+   - **Third:** The highest priority story where `"status": "todo"`
 4. Read the PRD file (path is in `board.json` → `prdSource`) for full context
-5. Implement that single story
-6. Run quality checks
-7. If checks pass, commit ALL changes with message: `feat: [Story ID] - [Story Title]`
-8. Update `tasks/board.json` to set that story's `"status": "qa"`
-9. Append your progress to `tasks/progress.txt`
+5. Set the story's status to `"in-progress"` in `board.json` before you start coding
+6. Implement that single story
+7. Run quality checks
+8. If checks pass, commit ALL changes with message: `feat: [Story ID] - [Story Title]`
+9. Update `tasks/board.json` to set that story's `"status": "qa"`
+10. Append your progress to `tasks/progress.txt`
 
 ---
 
@@ -125,9 +129,9 @@ If you discover a pattern that future agents should know about, ALSO add it to t
 
 After completing ONE user story (commit done, board updated, progress logged):
 
-- Check `tasks/board.json` for remaining stories with `"status": "todo"`
-- If there are NO more todo stories → respond with exactly: **NO_MORE_TASKS**
-- If there are more todo stories → respond with: **COMPLETED [Story ID]: [Story Title]**
+- Check `tasks/board.json` for remaining stories with `"status": "todo"` or `"status": "in-progress"`
+- If there are NONE → respond with exactly: **NO_MORE_TASKS**
+- If there are more → respond with: **COMPLETED [Story ID]: [Story Title]**
 
 **STOP IMMEDIATELY** after outputting your status. Do NOT continue to the next story.
 
