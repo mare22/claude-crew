@@ -84,9 +84,11 @@ sequenceDiagram
 # Clone the repo
 git clone https://github.com/mare22/claude-crew.git
 
-# Copy skills and agents into your project
+# Copy skills, agents, and board viewer into your project
 cp -r claude-crew/.claude/skills/ your-project/.claude/skills/
 cp -r claude-crew/.claude/agents/ your-project/.claude/agents/
+mkdir -p your-project/tasks
+cp claude-crew/tasks/board.html your-project/tasks/board.html
 ```
 
 ### Option 2: Use as a reference
